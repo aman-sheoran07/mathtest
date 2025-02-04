@@ -6,28 +6,13 @@ interface WelcomeScreenProps {
   onStart: () => void;
 }
 
-interface TimerProps {
-  timeLeft: number;
-}
-
-interface QuestionNavigationProps {
-  currentQuestion: number;
-  totalQuestions: number;
-  onPrevious: () => void;
-  onNext: () => void;
-}
-
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => (
   <div className="min-h-screen bg-white p-8 flex flex-col items-center justify-center">
     <div className="max-w-2xl text-center">
-      <h1 className="text-4xl font-bold text-black mb-4">Welcome to Vidushee to Mathematics Quiz</h1>
+      <h1 className="text-4xl font-bold text-black mb-4">Welcome to Mathematics Quiz</h1>
       <p className="text-lg text-gray-700 mb-8">
         You are about to start a 20-minute algebra quiz covering various topics including 
         progressions, equations, and functions. The quiz consists of 15 questions, each carrying 1 mark.
-      </p>
-      <p className="text-gray-700 mb-8">
-        Once you start, the timer will begin counting down from 20 minutes. 
-        The quiz will automatically submit when the time is up.
       </p>
       <button
         onClick={onStart}
@@ -39,59 +24,78 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => (
   </div>
 );
 
-const Timer = ({ timeLeft }) => {
+const Timer = ({ timeLeft }: { timeLeft: number }) => {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
   return (
-      <div className={`fixed top-4 right-4 bg-white border border-gray-200 p-4 rounded-lg shadow text-center ${
-          timeLeft <= 300 ? 'text-red-600' : 'text-black'
-      }`}>
-        <div className="text-lg font-bold">Time Remaining</div>
-        <div className="text-2xl">
-          {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-        </div>
+    <div className={`fixed top-4 right-4 bg-white border border-gray-200 p-4 rounded-lg shadow text-center ${
+      timeLeft <= 300 ? 'text-red-600' : 'text-black'
+    }`}>
+      <div className="text-lg font-bold">Time Remaining</div>
+      <div className="text-2xl">
+        {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
       </div>
+    </div>
   );
 };
 
-const QuestionNavigation = ({ currentQuestion, totalQuestions, onPrevious, onNext }) => (
-    <div className="fixed bottom-4 left-4 bg-white border border-gray-200 p-4 rounded-lg shadow flex gap-4">
-      <button
-          onClick={onPrevious}
-          disabled={currentQuestion === 1}
-          className={`px-4 py-2 rounded ${
-              currentQuestion === 1
-                  ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-          }`}
-      >
-        Previous
-      </button>
-      <span className="flex items-center">
+interface QuestionNavigationProps {
+  currentQuestion: number;
+  totalQuestions: number;
+  onPrevious: () => void;
+  onNext: () => void;
+}
+
+const QuestionNavigation: React.FC<QuestionNavigationProps> = ({ 
+  currentQuestion, 
+  totalQuestions, 
+  onPrevious, 
+  onNext 
+}) => (
+  <div className="fixed bottom-4 left-4 bg-white border border-gray-200 p-4 rounded-lg shadow flex gap-4">
+    <button
+      onClick={onPrevious}
+      disabled={currentQuestion === 1}
+      className={`px-4 py-2 rounded ${
+        currentQuestion === 1 
+          ? 'bg-gray-300 cursor-not-allowed' 
+          : 'bg-blue-600 hover:bg-blue-700 text-white'
+      }`}
+    >
+      Previous
+    </button>
+    <span className="flex items-center text-black">
       Question {currentQuestion} of {totalQuestions}
     </span>
-      <button
-          onClick={onNext}
-          disabled={currentQuestion === totalQuestions}
-          className={`px-4 py-2 rounded ${
-              currentQuestion === totalQuestions
-                  ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-          }`}
-      >
-        Next
-      </button>
-    </div>
+    <button
+      onClick={onNext}
+      disabled={currentQuestion === totalQuestions}
+      className={`px-4 py-2 rounded ${
+        currentQuestion === totalQuestions 
+          ? 'bg-gray-300 cursor-not-allowed' 
+          : 'bg-blue-600 hover:bg-blue-700 text-white'
+      }`}
+    >
+      Next
+    </button>
+  </div>
 );
 
-const Quiz: React.FC = () => {
+export default function Page() {
   const [started, setStarted] = useState<boolean>(false);
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showResults, setShowResults] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(20 * 60);
+
+  const handleAnswerChange = (questionId: number, answer: string) => {
+    setUserAnswers(prev => ({
+      ...prev,
+      [questionId]: answer
+    }));
+  };
 
   const handleSubmit = () => {
     let newScore = 0;
@@ -102,6 +106,14 @@ const Quiz: React.FC = () => {
     });
     setScore(newScore);
     setShowResults(true);
+  };
+
+  const handlePrevious = () => {
+    setCurrentQuestion(prev => Math.max(1, prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentQuestion(prev => Math.min(questions.length, prev + 1));
   };
 
   useEffect(() => {
@@ -118,8 +130,7 @@ const Quiz: React.FC = () => {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [started, showResults, handleSubmit]); 
-
+  }, [started, showResults]);
   const questions = [
     {
       id: 1,
