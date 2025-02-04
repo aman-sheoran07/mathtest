@@ -1,28 +1,42 @@
 'use client'
+
 import React, { useState, useEffect } from 'react';
 
-const WelcomeScreen = ({ onStart }) => (
-    <div className="min-h-screen bg-white p-8 flex flex-col items-center justify-center">
-      <div className="max-w-2xl text-center">
-        <h1 className="text-4xl font-bold text-black mb-4">Welcome to Vidushee to Mathematics Quiz</h1>
-        <p className="text-lg text-gray-700 mb-8">
-          You are about to start a 20-minute algebra quiz covering various topics including
-          progressions, equations, and functions. The quiz consists of 15 questions, each carrying 1 mark.
-        </p>
-        <p className="text-gray-700 mb-8">
-          Once you start, the timer will begin counting down from 20 minutes.
-          The quiz will automatically submit when the time is up.
-          Good Luck  🌝
-        </p>
+interface WelcomeScreenProps {
+  onStart: () => void;
+}
 
-        <button
-            onClick={onStart}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg"
-        >
-          Start Quiz
-        </button>
-      </div>
+interface TimerProps {
+  timeLeft: number;
+}
+
+interface QuestionNavigationProps {
+  currentQuestion: number;
+  totalQuestions: number;
+  onPrevious: () => void;
+  onNext: () => void;
+}
+
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => (
+  <div className="min-h-screen bg-white p-8 flex flex-col items-center justify-center">
+    <div className="max-w-2xl text-center">
+      <h1 className="text-4xl font-bold text-black mb-4">Welcome to Vidushee to Mathematics Quiz</h1>
+      <p className="text-lg text-gray-700 mb-8">
+        You are about to start a 20-minute algebra quiz covering various topics including 
+        progressions, equations, and functions. The quiz consists of 15 questions, each carrying 1 mark.
+      </p>
+      <p className="text-gray-700 mb-8">
+        Once you start, the timer will begin counting down from 20 minutes. 
+        The quiz will automatically submit when the time is up.
+      </p>
+      <button
+        onClick={onStart}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg"
+      >
+        Start Quiz
+      </button>
     </div>
+  </div>
 );
 
 const Timer = ({ timeLeft }) => {
@@ -71,21 +85,31 @@ const QuestionNavigation = ({ currentQuestion, totalQuestions, onPrevious, onNex
     </div>
 );
 
-const Quiz = () => {
-  const [started, setStarted] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(1);
-  const [userAnswers, setUserAnswers] = useState({});
-  const [showResults, setShowResults] = useState(false);
-  const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(20 * 60);
+const Quiz: React.FC = () => {
+  const [started, setStarted] = useState<boolean>(false);
+  const [currentQuestion, setCurrentQuestion] = useState<number>(1);
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
+  const [showResults, setShowResults] = useState<boolean>(false);
+  const [score, setScore] = useState<number>(0);
+  const [timeLeft, setTimeLeft] = useState<number>(20 * 60);
+
+  const handleSubmit = () => {
+    let newScore = 0;
+    questions.forEach(q => {
+      if (userAnswers[q.id]?.toLowerCase() === q.correctAnswer.toLowerCase()) {
+        newScore++;
+      }
+    });
+    setScore(newScore);
+    setShowResults(true);
+  };
 
   useEffect(() => {
-    let timer;
+    let timer: NodeJS.Timeout;
     if (started && !showResults) {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            clearInterval(timer);
             handleSubmit();
             return 0;
           }
@@ -94,7 +118,7 @@ const Quiz = () => {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [started, showResults]);
+  }, [started, showResults, handleSubmit]); 
 
   const questions = [
     {
